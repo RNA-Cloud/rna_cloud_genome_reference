@@ -10,12 +10,14 @@ include { DECOMPRESS_GTF } from '../modules/annotation_build.nf'
 include { REMOVE_SECTIONS } from '../modules/annotation_build.nf'
 include { SORT_GTF } from '../modules/annotation_build.nf'
 include { GENERATE_BED_FILE } from '../modules/annotation_build.nf'
+include { GENERATE_REFSEQ_MANE_BED } from '../modules/annotation_build.nf'
 
 workflow BUILD_ANNOTATION_REFERENCE {
     take:
     gtf
     assembly_report
     grc_fixes_assessment
+    refseq_mane_annotation
 
     main:
     DOWNLOAD_EBV_GTF(
@@ -74,9 +76,14 @@ workflow BUILD_ANNOTATION_REFERENCE {
         SORT_GTF.out.compressed_gtf
     )
 
+    GENERATE_REFSEQ_MANE_BED(
+        refseq_mane_annotation
+    )
+
     emit:
     compressed_gtf                 = SORT_GTF.out.compressed_gtf
     compressed_gtf_index           = SORT_GTF.out.compressed_gtf_index
     uncompressed_gtf               = SORT_GTF.out.uncompressed_gtf
     bed_file                       = GENERATE_BED_FILE.out.bed_file
+    refseq_mane_bed_file           = GENERATE_REFSEQ_MANE_BED.out.bed_file
 }

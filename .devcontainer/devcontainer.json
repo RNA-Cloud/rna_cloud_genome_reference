@@ -15,10 +15,6 @@
 			"installZsh": true,
 			"configureZshAsDefaultShell": true,
 			"installOhMyZsh": true
-		},
-		"ghcr.io/dhoeric/features/act:latest": {},
-		"ghcr.io/devcontainers/features/docker-in-docker": {
-			"version": "latest"
 		}
 	},
 

@@ -197,6 +197,53 @@ process SORT_GTF {
     """
 }
 
+process GENERATE_REFSEQ_MANE_BED {
+    tag "GENERATE_REFSEQ_MANE_BED"
+    publishDir "${params.output_dir}", mode: 'copy'
+
+    input:
+    path refseq_mane_annotation
+
+    output:
+    path "annotation_mane.bed", emit: bed_file
+
+    script:
+    """
+    set -euo pipefail
+
+    # Note: gtfToGenePred outputs ONE LINE PER TRANSCRIPT model, not per gene.
+    #
+    # In the GTF:
+    #   feature == "gene"        -> one row per gene
+    #   feature == "transcript"  -> one row per transcript
+    #
+    # genePred rows correspond to transcripts (grouped exon structures),
+    # so the number of lines in the genePred output is expected to match
+    # the number of transcripts, not the number of genes.
+    #
+    # Therefore:
+    #   wc -l test.genepred
+    # will often be larger than:
+    #   awk '\$3=="gene"' ...
+    #
+    # In the MANE RefSeq GTF most genes have a single transcript, but a small
+    # number of genes include an additional transcript (e.g. MANE Select +
+    # MANE Plus Clinical). These extra transcripts produce additional rows
+    # in the genePred output, explaining why the counts differ slightly.
+    #
+    # Example observed counts:
+    #   genePred rows (transcripts): 19437
+    #   gene feature rows (genes):   19363
+    #   difference:                   74 genes with an extra transcript
+
+    echo "Generating BED file from RefSeq MANE annotation GTF"
+    gtfToGenePred -ignoreGroupsWithoutExons ${refseq_mane_annotation} refseq_mane_annotation.genepred
+
+    echo "Converting genePred to BED file"
+    genePredToBed refseq_mane_annotation.genepred annotation_mane.bed
+    """
+}
+
 process GENERATE_BED_FILE {
     tag "GENERATE_BED_FILE"
     publishDir "${params.output_dir}", mode: 'copy'

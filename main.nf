@@ -52,7 +52,8 @@ workflow {
     BUILD_ANNOTATION_REFERENCE(
         DOWNLOAD_GENOME_AND_REFERENCES.out.gtf,
         DOWNLOAD_GENOME_AND_REFERENCES.out.assembly_report,
-        GRC_FIXES_ASSESSMENT.out.grc_fixes_assessment
+        GRC_FIXES_ASSESSMENT.out.grc_fixes_assessment,
+        DOWNLOAD_GENOME_AND_REFERENCES.out.refseq_mane_annotation
     )
 
     // These are regions of the genome that are already masked in the NCBI assembly
@@ -67,7 +68,9 @@ workflow {
         BUILD_GENOME_REFERENCE.out.mask_regions_bed,
         BUILD_GENOME_REFERENCE.out.unmask_regions_bed,
         BUILD_ANNOTATION_REFERENCE.out.bed_file,
-        channel.value(ncbi_assembly_masked_regions_paths)
+        channel.value(ncbi_assembly_masked_regions_paths),
+        DOWNLOAD_GENOME_AND_REFERENCES.out.refseq_mane_annotation,
+        BUILD_ANNOTATION_REFERENCE.out.refseq_mane_bed_file
     )
 
     genome_and_annotation_version = System.getenv("GENOME_AND_ANNOTATION_VERSION") ?: "0.0.0"
@@ -96,6 +99,7 @@ workflow {
         , BUILD_ANNOTATION_REFERENCE.out.compressed_gtf_index
         , BUILD_ANNOTATION_REFERENCE.out.uncompressed_gtf
         , BUILD_ANNOTATION_REFERENCE.out.bed_file
+        , BUILD_ANNOTATION_REFERENCE.out.refseq_mane_bed_file
     )
 
     CALCULATE_MD5_SUMMARY(final_outputs)
