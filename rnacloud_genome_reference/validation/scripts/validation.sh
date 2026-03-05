@@ -2,8 +2,8 @@
 
 set -uo pipefail
 
-if [ $# -ne 7 ]; then
-  echo "Usage: $0 <FASTA> <FASTA_INDEX> <GTF> <GTF_INDEX> <MASKED_REGIONS_BED> <UNMASKED_REGIONS_BED> <ANNOTATION_BED>"
+if [ $# -ne 9 ]; then
+  echo "Usage: $0 <FASTA> <FASTA_INDEX> <GTF> <GTF_INDEX> <MASKED_REGIONS_BED> <UNMASKED_REGIONS_BED> <ANNOTATION_BED> <REFSEQ_MANE_ANNOTATION> <REFSEQ_MANE_BED_FILE>"
   exit 1
 fi
 
@@ -14,14 +14,18 @@ GTF_INDEX="$4"
 MASKED_REGIONS_BED="$5"
 UNMASKED_REGIONS_BED="$6"
 ANNOTATION_BED="$7"
+REFSEQ_MANE_ANNOTATION="$8"
+REFSEQ_MANE_BED_FILE="$9"
 
-echo "FASTA                 : $FASTA"
-echo "FASTA Index           : $FASTA_INDEX"
-echo "GTF                   : $GTF"
-echo "GTF Index             : $GTF_INDEX"
-echo "Masked Regions BED    : $MASKED_REGIONS_BED"
-echo "Unmasked Regions BED  : $UNMASKED_REGIONS_BED"
-echo "Annotation BED        : $ANNOTATION_BED"
+echo "FASTA                  : $FASTA"
+echo "FASTA Index            : $FASTA_INDEX"
+echo "GTF                    : $GTF"
+echo "GTF Index              : $GTF_INDEX"
+echo "Masked Regions BED     : $MASKED_REGIONS_BED"
+echo "Unmasked Regions BED   : $UNMASKED_REGIONS_BED"
+echo "Annotation BED         : $ANNOTATION_BED"
+echo "RefSeq MANE Annotation : $REFSEQ_MANE_ANNOTATION"
+echo "RefSeq MANE BED File   : $REFSEQ_MANE_BED_FILE"
 
 # Initialize validation status
 VALIDATION_STATUS=0
@@ -146,6 +150,42 @@ if [ "$UNASSIGNED_COUNT" -eq 0 ]; then
   echo ✅ No transcript names start with 'unassigned' in annotation bed file!
 else
   echo ⛔️ Some transcript names start with 'unassigned' in annotation bed file \(Count: ${UNASSIGNED_COUNT}\)!
+  VALIDATION_STATUS=1
+fi
+
+echo 🕵️‍♀️ Check that number of lines in RefSeq MANE gtf and bed file are equal
+# Note: gtfToGenePred outputs ONE LINE PER TRANSCRIPT model, not per gene.
+#
+# In the GTF:
+#   feature == "gene"        -> one row per gene
+#   feature == "transcript"  -> one row per transcript
+#
+# genePred rows correspond to transcripts (grouped exon structures),
+# so the number of lines in the genePred output is expected to match
+# the number of transcripts, not the number of genes.
+#
+# Therefore:
+#   wc -l test.genepred
+# will often be larger than:
+#   awk '$3=="gene"' ...
+#
+# In the MANE RefSeq GTF most genes have a single transcript, but a small
+# number of genes include an additional transcript (e.g. MANE Select +
+# MANE Plus Clinical). These extra transcripts produce additional rows
+# in the genePred output, explaining why the counts differ slightly.
+#
+# Example observed counts:
+#   genePred rows (transcripts): 19437
+#   gene feature rows (genes):   19363
+#   difference:                   74 genes with an extra transcript
+
+REFSEQ_MANE_GTF_COUNT=$(gunzip -c "$REFSEQ_MANE_ANNOTATION" | grep -v '^#' | awk -F'\t' '$3=="transcript"' | wc -l)
+REFSEQ_MANE_BED_COUNT=$(wc -l < "$REFSEQ_MANE_BED_FILE")
+
+if [ "$REFSEQ_MANE_GTF_COUNT" -eq "$REFSEQ_MANE_BED_COUNT" ]; then
+  echo ✅ Number of (MANE Select and Clinical) transcripts in RefSeq MANE gtf and bed file are equal!
+else
+  echo ⛔️ Number of (MANE Select and Clinical) transcripts in RefSeq MANE gtf and bed file are not equal \(GTF: ${REFSEQ_MANE_GTF_COUNT}, BED: ${REFSEQ_MANE_BED_COUNT}\)!
   VALIDATION_STATUS=1
 fi
 

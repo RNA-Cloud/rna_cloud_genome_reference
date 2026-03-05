@@ -214,6 +214,7 @@ def main(argv: list[str] | None = None):
         print(f"- FASTA: {config['genome']['fasta_url']}")
         print(f"- GTF: {config['genome']['annotation_url']}")
         print(f"- CEN PAR Mask regions: {config['genome']['cen_par_mask_regions']}")
+        print(f"- MANE Refseq annotation: {config['genome']['refseq_mane_annotation_url']}")
         print("## EBV genome")
         print(f"- FASTA: {config['genome']['no_alt_fasta_url']}")
         print(f"- GTF: {config['genome']['ebv_annotation_url']}")

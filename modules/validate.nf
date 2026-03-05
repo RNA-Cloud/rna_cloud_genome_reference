@@ -13,6 +13,8 @@ process VALIDATE_GENOME_ANNOTATION {
     path unmasked_regions_bed
     path annotation_bed
     val ncbi_assembly_masked_regions_paths
+    path refseq_mane_annotation
+    path refseq_mane_bed_file
 
     output:
     path "validation_report.txt", emit: report
@@ -35,7 +37,9 @@ process VALIDATE_GENOME_ANNOTATION {
       ${gtf_index} \
       ${masked_regions_bed} \
       updated_unmasked_regions.bed \
-      ${annotation_bed} | tee validation_report.txt
+      ${annotation_bed} \
+      ${refseq_mane_annotation} \
+      ${refseq_mane_bed_file} | tee validation_report.txt
     """
 }
 
