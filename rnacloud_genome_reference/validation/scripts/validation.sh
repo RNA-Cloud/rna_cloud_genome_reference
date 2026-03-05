@@ -183,9 +183,9 @@ REFSEQ_MANE_GTF_COUNT=$(gunzip -c "$REFSEQ_MANE_ANNOTATION" | grep -v '^#' | awk
 REFSEQ_MANE_BED_COUNT=$(wc -l < "$REFSEQ_MANE_BED_FILE")
 
 if [ "$REFSEQ_MANE_GTF_COUNT" -eq "$REFSEQ_MANE_BED_COUNT" ]; then
-  echo ✅ Number of (MANE Select and Clinical) transcripts in RefSeq MANE gtf and bed file are equal!
+  echo ✅ Number of \(MANE Select and Clinical\) transcripts in RefSeq MANE gtf and bed file are equal!
 else
-  echo ⛔️ Number of (MANE Select and Clinical) transcripts in RefSeq MANE gtf and bed file are not equal \(GTF: ${REFSEQ_MANE_GTF_COUNT}, BED: ${REFSEQ_MANE_BED_COUNT}\)!
+  echo ⛔️ Number of \(MANE Select and Clinical\) transcripts in RefSeq MANE gtf and bed file are not equal \(GTF: ${REFSEQ_MANE_GTF_COUNT}, BED: ${REFSEQ_MANE_BED_COUNT}\)!
   VALIDATION_STATUS=1
 fi
 
