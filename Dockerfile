@@ -1,24 +1,15 @@
 FROM mambaorg/micromamba:1.5.10-noble
 
 USER root
-
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    git-lfs \
-    sudo \
-    curl \
-    wget \
-    ca-certificates \
+    git git-lfs sudo curl wget ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-    
+
 USER $MAMBA_USER
 
-RUN micromamba create \
-    -y -p /opt/conda/envs/bioenv \
-    -c conda-forge \
-    -c bioconda \
+RUN micromamba create -y -p /opt/conda/envs/bioenv \
+    -c conda-forge -c bioconda \
     nextflow \
     ucsc-genepredtobed==482 \
     ucsc-gtftogenepred==482 \
@@ -27,32 +18,30 @@ RUN micromamba create \
     bedtools=2.31.1 \
     seqkit=2.10.1 \
     python=3.12.12 \
-    pip && \
-    micromamba clean --all -y
+    && micromamba clean --all -y
 
-    
-# Put that env first on PATH so binaries are available without activation
-ENV PATH=/opt/conda/envs/bioenv/bin:$PATH
+COPY --from=ghcr.io/astral-sh/uv:0.10.9 /uv /usr/local/bin/uv
 
-RUN nextflow -version
-    
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# Tell uv not to download or manage Python — use the conda-managed interpreter
+ENV UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=/opt/conda/envs/bioenv/bin/python \
+    UV_LINK_MODE=copy \
+    UV_NO_CACHE=1
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
+# Create venv in user-writable location
+RUN uv venv /home/$MAMBA_USER/.venv --python /opt/conda/envs/bioenv/bin/python
 
-# Set the working directory
+# venv binaries take precedence; conda env provides nextflow, samtools, etc.
+ENV VIRTUAL_ENV=/home/$MAMBA_USER/.venv \
+    PATH=/home/$MAMBA_USER/.venv/bin:/opt/conda/envs/bioenv/bin:$PATH
+
 WORKDIR /app
+COPY --chown=$MAMBA_USER:$MAMBA_USER requirements.txt .
+RUN uv pip install -r requirements.txt
 
-# Copy the requirements file and install Python dependencies
-COPY requirements.txt .
+COPY --chown=$MAMBA_USER:$MAMBA_USER . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN which python && python --version && which nextflow && nextflow -version
 
-# Copy the application code
-COPY . .
-
-# Set the entrypoint to the main script
-ENTRYPOINT ["python"]
+ENTRYPOINT ["/usr/local/bin/_entrypoint.sh", "python"]
 CMD ["-c", "import time; time.sleep(float('inf'))"]

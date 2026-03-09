@@ -18,10 +18,20 @@
 		}
 	},
 
+	"containerEnv": {
+		"UV_PROJECT_ENVIRONMENT": "/home/mambauser/.venv",
+		"PYTHONDONTWRITEBYTECODE": "1",
+		"PYTHONUNBUFFERED": "1"
+	},
+
+	"remoteEnv": {
+		"PATH": "/home/mambauser/.venv/bin:${containerEnv:PATH}"
+	},
+
 	// Mount the source code
 	"mounts": [
 		"source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
-		"type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/devuser/.ssh,readonly"
+		"type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/mambauser/.ssh,readonly"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -33,19 +43,23 @@
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
-			"extensions": [
-				"ms-python.python",
-				"ms-python.debugpy",
-				"ms-toolsai.jupyter",
-				"mechatroner.rainbow-csv",
-				"bierner.markdown-mermaid",
-				"SanjulaGanepola.github-local-actions",
-				"nextflow.nextflow",
-				"yzhang.markdown-all-in-one",
-				"Gruntfuggly.todo-tree",
-				"njpwerner.autodocstring",
-				"alexkrechik.cucumberautocomplete"
-			]
+		"settings": {
+			"python.defaultInterpreterPath": "/home/mambauser/.venv/bin/python",
+			"python.terminal.activateEnvironment": false
+		},
+		"extensions": [
+			"ms-python.python",
+			"ms-python.debugpy",
+			"ms-toolsai.jupyter",
+			"mechatroner.rainbow-csv",
+			"bierner.markdown-mermaid",
+			"SanjulaGanepola.github-local-actions",
+			"nextflow.nextflow",
+			"yzhang.markdown-all-in-one",
+			"Gruntfuggly.todo-tree",
+			"njpwerner.autodocstring",
+			"alexkrechik.cucumberautocomplete"
+		]
 		}
 	},
 
