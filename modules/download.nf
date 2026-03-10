@@ -18,8 +18,11 @@ process DOWNLOAD_EBV {
     echo "Downloading EBV genome from: ${ebv_fasta_url}"
     wget -qc ${ebv_fasta_url}
 
-    echo "Unzipping EBV genome and renaming contig to chrEBV..."
-    sed '1s/>.*/>chrEBV/' \${file_gz} | seqkit seq -w 60 > chrEBV.fasta
+    echo "Unzipping EBV genome"
+    gunzip -c \${file_gz} > \${file_fa}
+
+    echo "Setting contig name to chrEBV and reformatting to 60 characters per line"
+    sed '1s/>.*/>chrEBV/' \${file_fa} | seqkit seq -w 60 > chrEBV.fasta
     """
 }
 
