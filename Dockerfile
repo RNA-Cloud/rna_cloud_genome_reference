@@ -1,4 +1,4 @@
-FROM mambaorg/micromamba:1.5.10-noble
+FROM mambaorg/micromamba:2.5.0-ubuntu24.04
 
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,11 +13,11 @@ RUN micromamba create -y -p /opt/conda/envs/bioenv \
     nextflow \
     ucsc-genepredtobed==482 \
     ucsc-gtftogenepred==482 \
-    samtools=1.22.1 \
-    duckdb-cli=1.3.2 \
+    samtools=1.23 \
+    duckdb-cli=1.4.4 \
     bedtools=2.31.1 \
-    seqkit=2.10.1 \
-    python=3.12.12 \
+    seqkit=2.13.0 \
+    python=3.13.12 \
     && micromamba clean --all -y
 
 COPY --from=ghcr.io/astral-sh/uv:0.10.9 /uv /usr/local/bin/uv
@@ -37,7 +37,7 @@ ENV VIRTUAL_ENV=/home/$MAMBA_USER/.venv \
 
 WORKDIR /app
 COPY --chown=$MAMBA_USER:$MAMBA_USER requirements.txt .
-RUN uv pip install -r requirements.txt
+RUN uv pip install --python /home/$MAMBA_USER/.venv/bin/python -r requirements.txt
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER . .
 
