@@ -16,7 +16,7 @@ on:
 
 jobs:
   pull_request:
-    runs-on: large_github_build_agent
+    runs-on: ubuntu-latest
     env:
       IMAGE_NAME: "rnacloud_runner"
     steps:

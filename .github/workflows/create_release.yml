@@ -5,7 +5,7 @@ on:
 
 jobs:
   create_release:
-    runs-on: large_github_build_agent
+    runs-on: ubuntu-latest
     env:
       IMAGE_NAME: "rnacloud_runner"
     steps:
