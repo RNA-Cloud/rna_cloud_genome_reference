@@ -216,7 +216,7 @@ def main(argv: list[str] | None = None):
         print(f"- CEN PAR Mask regions: {config['genome']['cen_par_mask_regions']}")
         print(f"- MANE Refseq annotation: {config['genome']['refseq_mane_annotation_url']}")
         print("## EBV genome")
-        print(f"- FASTA: {config['genome']['no_alt_fasta_url']}")
+        print(f"- FASTA: {config['genome']['ebv_fasta_url']}")
         print(f"- GTF: {config['genome']['ebv_annotation_url']}")
         print("## Additional references")
         print(f"- GRC fixes: {config['reference']['grc_fixes']}")

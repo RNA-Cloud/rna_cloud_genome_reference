@@ -53,7 +53,8 @@ workflow {
         DOWNLOAD_GENOME_AND_REFERENCES.out.gtf,
         DOWNLOAD_GENOME_AND_REFERENCES.out.assembly_report,
         GRC_FIXES_ASSESSMENT.out.grc_fixes_assessment,
-        DOWNLOAD_GENOME_AND_REFERENCES.out.refseq_mane_annotation
+        DOWNLOAD_GENOME_AND_REFERENCES.out.refseq_mane_annotation,
+        DOWNLOAD_GENOME_AND_REFERENCES.out.ebv_gtf
     )
 
     // These are regions of the genome that are already masked in the NCBI assembly
