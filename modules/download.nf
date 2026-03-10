@@ -1,36 +1,28 @@
 nextflow.enable.dsl=2
 
 process DOWNLOAD_EBV {
-    tag "${genome_no_alt_fasta_url.tokenize('/')[-1]}"
+    tag "${ebv_fasta_url.tokenize('/')[-1]}"
     storeDir "${params.data_dir}"
 
     input:
-    val genome_no_alt_fasta_url
+    val ebv_fasta_url
 
     output:
     path "chrEBV.fasta", emit: fasta
 
     script:
     """
-    file_gz=\$(basename ${genome_no_alt_fasta_url})
+    file_gz=\$(basename ${ebv_fasta_url})
     file_fa=\$(basename \${file_gz} .gz)
 
-    echo "Downloading genome from: ${genome_no_alt_fasta_url}"
-    wget -qc ${genome_no_alt_fasta_url}
+    echo "Downloading EBV genome from: ${ebv_fasta_url}"
+    wget -qc ${ebv_fasta_url}
 
-    echo "Unzipping \${file_gz}..."
-    gunzip -f \${file_gz}
+    echo "Unzipping EBV genome"
+    gunzip -c \${file_gz} > \${file_fa}
 
-    echo "Compressing with bgzip..."
-    bgzip \${file_fa}
-
-    echo "Indexing with samtools..."
-    samtools faidx \${file_gz}
-        
-    samtools faidx \${file_gz} chrEBV > chrEBV.fasta
-    rm \${file_gz}
-    rm \${file_gz}.fai
-    rm \${file_gz}.gzi
+    echo "Setting contig name to chrEBV and reformatting to 60 characters per line"
+    sed '1s/>.*/>chrEBV/' \${file_fa} | seqkit seq -w 60 > chrEBV.fasta
     """
 }
 

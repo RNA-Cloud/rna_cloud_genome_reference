@@ -1,6 +1,5 @@
 nextflow.enable.dsl=2
 
-include { DOWNLOAD_EBV_GTF } from '../modules/download.nf'
 include { CONVERT_ANNOTATION_REFSEQ_TO_UCSC } from '../modules/annotation_build.nf'
 include { GET_TARGET_CONTIGS } from '../modules/genome_build.nf'
 include { SUBSET_GTF } from '../modules/annotation_build.nf'
@@ -18,12 +17,9 @@ workflow BUILD_ANNOTATION_REFERENCE {
     assembly_report
     grc_fixes_assessment
     refseq_mane_annotation
+    ebv_gtf
 
     main:
-    DOWNLOAD_EBV_GTF(
-        params.genome.ebv_annotation_url
-    )
-
     REMOVE_SECTIONS(
         gtf,
         channel.value([["NC_000021.9", "rRNA"],
@@ -63,7 +59,7 @@ workflow BUILD_ANNOTATION_REFERENCE {
     APPEND_EBV_GTF(
         "EBV",
         SUBSET_GTF.out.gtf,
-        DOWNLOAD_EBV_GTF.out.gtf.toList()
+        ebv_gtf.toList()
     )
 
     SORT_GTF(

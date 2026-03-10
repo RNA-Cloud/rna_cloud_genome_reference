@@ -11,6 +11,7 @@ include { DOWNLOAD_FILE as DOWNLOAD_CLINICALLY_RELEVANT_GENES }  from '../module
 include { DOWNLOAD_FILE as DOWNLOAD_CEN_PAR_MASK_REGIONS }       from '../modules/download.nf'
 include { DOWNLOAD_FILE as DOWNLOAD_REFSEQ_MANE_ANNOTATION }     from '../modules/download.nf'
 include { DOWNLOAD_EBV } from '../modules/download.nf'
+include { DOWNLOAD_EBV_GTF } from '../modules/download.nf'
 
 //
 // A DSL2 sub-workflow that reads params.* directly
@@ -19,9 +20,10 @@ workflow DOWNLOAD_GENOME_AND_REFERENCES {
     main:
     println "Downloading genome and references with the following parameters:"
     println "Genome FASTA URL              : ${params.genome.fasta_url}"
-    println "Genome no-alt FASTA URL       : ${params.genome.no_alt_fasta_url}"
     println "Genome annotation URL         : ${params.genome.annotation_url}"
     println "Genome assembly report URL    : ${params.genome.assembly_report}"
+    println "EBV FASTA URL                 : ${params.genome.ebv_fasta_url}"
+    println "EBV annotation URL            : ${params.genome.ebv_annotation_url}"
     println "CEN-PAR mask regions URL      : ${params.genome.cen_par_mask_regions}"
     println "Reference GRC fixes URL       : ${params.reference.grc_fixes}"
     println "Clinically relevant genes URL : ${params.reference.clinically_relevant_genes}"
@@ -35,7 +37,8 @@ workflow DOWNLOAD_GENOME_AND_REFERENCES {
     DOWNLOAD_CLINICALLY_RELEVANT_GENES(Channel.from(params.reference.clinically_relevant_genes))
     DOWNLOAD_CEN_PAR_MASK_REGIONS(Channel.from(params.genome.cen_par_mask_regions))
     DOWNLOAD_REFSEQ_MANE_ANNOTATION(Channel.from(params.genome.refseq_mane_annotation_url))
-    DOWNLOAD_EBV(Channel.from(params.genome.no_alt_fasta_url))
+    DOWNLOAD_EBV(Channel.from(params.genome.ebv_fasta_url))
+    DOWNLOAD_EBV_GTF(Channel.from(params.genome.ebv_annotation_url))
     
     emit:
     // expose the exact same seven channels as before
@@ -43,6 +46,7 @@ workflow DOWNLOAD_GENOME_AND_REFERENCES {
     fasta_fai_index       = DOWNLOAD_AND_INDEX_GENOME.out.fasta_fai_index
     fasta_gzi_index       = DOWNLOAD_AND_INDEX_GENOME.out.fasta_gzi_index
     ebv_fasta             = DOWNLOAD_EBV.out.fasta
+    ebv_gtf               = DOWNLOAD_EBV_GTF.out.gtf
     gtf                   = DOWNLOAD_AND_INDEX_GTF.out.gtf
     gtf_index             = DOWNLOAD_AND_INDEX_GTF.out.gtf_index
     assembly_report       = DOWNLOAD_ASSEMBLY_REPORT.out.downloaded_file
