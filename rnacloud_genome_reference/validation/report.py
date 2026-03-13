@@ -26,43 +26,6 @@ class AssemblyStatsProvider():
     def get_file_size(self) -> int:
         return os.path.getsize(self._fasta)
 
-class ReportDataProvider():
-    @staticmethod
-    def get_assembly(fasta_url: str) -> str:
-        match = re.search(r'(GRCh\d+)', fasta_url)
-        if match:
-            return match.group(1)
-        else:
-            raise ValueError("Assembly not found in the provided URL.")
-
-    @staticmethod
-    def get_provider(fasta_url: str) -> str:
-        match = re.search(r'.+(ncbi|ensembl|ucsc).+', fasta_url, re.IGNORECASE)
-        provider = None
-
-        if match:
-            provider = match.group(1)
-        else:
-            raise ValueError("Provider not found in the provided URL.")
-        
-        match provider.lower():
-            case 'ncbi':
-                return 'NCBI Refseq'
-            case 'ensembl':
-                return 'Ensembl'
-            case 'ucsc':
-                return 'UCSC'
-            case _:
-                raise ValueError("Unknown provider found in the provided URL.")
-            
-    @staticmethod
-    def get_accession(fasta_url: str) -> str:
-        match = re.search(r'(GCF_\d+\.\d+)', fasta_url)
-        if match:
-            return match.group(1)
-        else:
-            raise ValueError("Accession not found in the provided URL.")
-
 def load_config(config_path: str) -> dict:
     with open(config_path) as f:
         return json.load(f)
@@ -194,13 +157,19 @@ def main(argv: list[str] | None = None):
     config = load_config(config_path)
 
     with open(args.out, "w", encoding="utf-8") as f, redirect_stdout(f):
-        assembly = ReportDataProvider.get_assembly(config['genome']['fasta_url'])
-        provider = ReportDataProvider.get_provider(config['genome']['fasta_url'])
+        assembly_report_parser = AssemblyReportParser(assembly_report)
+
+        assembly_info = assembly_report_parser.assembly_info
+        assembly = assembly_info.get('Assembly name', 'Unknown Assembly')
+        provider = assembly_info.get('Submitter', 'Unknown Provider')
+        genbank_accession = assembly_info.get('GenBank assembly accession', 'Unknown Accession')
+        refseq_accession = assembly_info.get('RefSeq assembly accession', 'Unknown Accession')
 
         print("# Reference Genome and Annotation")
         print(f"- Assembly: {assembly}")
         print(f"- Provider: {provider}")
-        print(f"- Accession: {ReportDataProvider.get_accession(config['genome']['fasta_url'])}")
+        print(f"- GenBank Accession: {genbank_accession}")
+        print(f"- RefSeq Accession: {refseq_accession}")
         print()
 
         print("# File manifest")

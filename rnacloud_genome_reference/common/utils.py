@@ -11,6 +11,29 @@ class AssemblyReportParser:
         self.contig_lengths = self.regions.set_index('UCSC-style-name')['Sequence-Length'].to_dict()
         self.refseq_to_ucsc_map = self._load_refseq_to_ucsc_map()
         self.ucsc_to_refseq_map = self._load_ucsc_to_refseq_map()
+        self.assembly_info = self._load_assembly_info()
+
+    def _load_assembly_info(self) -> dict[str, str]:
+        logger.debug(f"Loading assembly info from {self.assembly_report}")
+        assembly_info = {}
+
+        with open(self.assembly_report, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.startswith("#"):
+                    break
+
+                if line.startswith("##"):
+                    continue
+
+                line = line[1:].strip()
+                if not line or ":" not in line:
+                    continue
+
+                key, value = line.split(":", 1)
+                assembly_info[key.strip()] = value.strip()
+
+        logger.debug(f"Loaded assembly info: {assembly_info}")
+        return assembly_info        
 
     def _load_assembly_report(self) -> pd.DataFrame:
         # Load the assembly report into a DataFrame

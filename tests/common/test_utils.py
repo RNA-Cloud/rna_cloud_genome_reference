@@ -49,3 +49,10 @@ def test_get_contig_range_invalid(chromosome_converter):
     # Test getting contig range for an invalid UCSC contig name
     with pytest.raises(ValueError, match="UCSC contig name invalid_chr not found in assembly report"):
         chromosome_converter.get_contig_range('invalid_chr')  # Replace with an actual invalid UCSC contig name
+
+def test_assembly_info(chromosome_converter):
+    # Test if the assembly info is loaded correctly
+    assembly_info = chromosome_converter.assembly_info
+    assert isinstance(assembly_info, dict)
+    assert 'Assembly name' in assembly_info
+    assert assembly_info['Assembly name'] == 'GRCh38.p14'
