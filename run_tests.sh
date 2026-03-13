@@ -47,6 +47,9 @@ mkdir -p $BATCH_RUN_BASE_DIR/temp
 mkdir -p $BATCH_RUN_BASE_DIR/output
 mkdir -p $BATCH_RUN_BASE_DIR/work
 
+echo "🔐 Setting permissions for batch run directories"
+chmod -R 777 $BATCH_RUN_BASE_DIR
+
 echo "📂 Copying gnomAD data to batch run data directory"
 cp -r tests/batch_run/gnomad $BATCH_RUN_BASE_DIR/data
 
