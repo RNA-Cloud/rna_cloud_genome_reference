@@ -6,7 +6,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 def simplify_and_annotate_grc_fixes(grc_fixes_path: str, assembly_report_path: str, output_path: str) -> None:
-    grc_fixes_temp = pd.read_csv(grc_fixes_path, sep='\t', low_memory=False)
+    grc_fixes_temp = pd.read_csv(grc_fixes_path, sep='\t',
+                                 low_memory=False,
+                                 dtype={'parent_name': str})
     logger.info(f"Loaded GRC fixes from {grc_fixes_path} with {len(grc_fixes_temp)} entries.")
 
     regions = pd.read_csv(assembly_report_path, 
