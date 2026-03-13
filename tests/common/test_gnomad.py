@@ -4,7 +4,6 @@ from unittest.mock import patch, Mock
 from rnacloud_genome_reference.common.gnomad import GnomadProvider  # replace 'your_module' with actual filename
 
 class TestGnomadProvider:
-    @pytest.mark.integration
     def test_query_gnomad_real_call(self):
         """
         This test will hit the real gnomAD GraphQL API.
