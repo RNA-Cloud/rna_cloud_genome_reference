@@ -217,3 +217,9 @@ work
 .nextflow
 .nextflow.log
 .nextflow.log.*
+
+# Batch test folder
+tests/batch_run/data
+tests/batch_run/work
+tests/batch_run/output
+tests/batch_run/temp
