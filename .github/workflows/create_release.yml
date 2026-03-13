@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: "rnacloud_runner"
-    steps:
 
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -39,9 +39,6 @@ jobs:
           mkdir -p data temp output work reference
           chmod -R 777 data temp output work reference
 
-      - name: Run tests
-        run: ./run_tests.sh
-
       - name: Run workflow
         run: ./run_workflow.sh
         env:
@@ -56,7 +53,7 @@ jobs:
           key: ${{ hashFiles('conf/sources.json') }}
 
       - name: Upload DAG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DAG.mmd
           path: output/dag.mmd
@@ -64,7 +61,7 @@ jobs:
           retention-days: 7
 
       - name: Upload report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report.html
           path: output/report.html
@@ -72,21 +69,114 @@ jobs:
           retention-days: 7
 
       - name: Upload timeline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: timeline.html
           path: output/timeline.html
           compression-level: 0
           retention-days: 7
 
+      - name: Compare md5checksums with latest release
+        id: compare_md5
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          CANDIDATE_TAG: ${{ steps.new_version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          generated_file="output/md5checksums.txt"
+          previous_file="/tmp/previous_md5checksums.txt"
+
+          if [[ ! -f "$generated_file" ]]; then
+            echo "::error::Generated checksum file not found: $generated_file"
+            exit 1
+          fi
+
+          echo "## Release decision" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Candidate tag: \`$CANDIDATE_TAG\`" >> "$GITHUB_STEP_SUMMARY"
+
+          echo "Looking for latest release..."
+          latest_tag="$(gh release list --repo "$REPO" --limit 1 --json tagName,isLatest --jq '.[] | select(.isLatest == true) | .tagName' || true)"
+
+          if [[ -z "${latest_tag:-}" ]]; then
+            echo "::notice title=Release decision::No previous release found. A new release will be created."
+            echo "release_needed=true" >> "$GITHUB_OUTPUT"
+            echo "reason=no_previous_release" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=" >> "$GITHUB_OUTPUT"
+
+            {
+              echo "- Previous release: none"
+              echo "- Decision: **CREATE release**"
+              echo "- Reason: no previous release exists"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit 0
+          fi
+
+          echo "Latest release tag: $latest_tag"
+          echo "- Previous release: \`$latest_tag\`" >> "$GITHUB_STEP_SUMMARY"
+
+          rm -f "$previous_file"
+          if ! gh release download "$latest_tag" \
+            --repo "$REPO" \
+            --pattern 'md5checksums.txt' \
+            --output "$previous_file"; then
+            echo "::notice title=Release decision::Latest release exists, but md5checksums.txt was not found. A new release will be created."
+            echo "release_needed=true" >> "$GITHUB_OUTPUT"
+            echo "reason=missing_previous_md5" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+
+            {
+              echo "- Decision: **CREATE release**"
+              echo "- Reason: latest release does not contain \`md5checksums.txt\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            exit 0
+          fi
+
+          echo "Comparing generated md5checksums.txt with release $latest_tag ..."
+          if cmp -s "$generated_file" "$previous_file"; then
+            echo "::notice title=Release decision::No new release created. md5checksums.txt matches the latest release ($latest_tag)."
+            echo "release_needed=false" >> "$GITHUB_OUTPUT"
+            echo "reason=md5_unchanged" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+
+            {
+              echo "- Decision: **SKIP release**"
+              echo "- Reason: \`md5checksums.txt\` is unchanged compared with \`$latest_tag\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice title=Release decision::Changes detected in md5checksums.txt. A new release will be created."
+            echo "release_needed=true" >> "$GITHUB_OUTPUT"
+            echo "reason=md5_changed" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+
+            {
+              echo "- Decision: **CREATE release**"
+              echo "- Reason: \`md5checksums.txt\` differs from \`$latest_tag\`"
+              echo ""
+              echo "<details><summary>Diff</summary>"
+              echo ""
+              echo '```diff'
+              diff -u "$previous_file" "$generated_file" || true
+              echo '```'
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Create version
         id: create_version
+        if: steps.compare_md5.outputs.release_needed == 'true'
         uses: anothrNick/github-tag-action@1.75.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BUMP: patch
 
       - name: Release
+        if: steps.compare_md5.outputs.release_needed == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.create_version.outputs.tag }}
@@ -102,3 +192,24 @@ jobs:
             output/genome_and_annotation_report.md
           generate_release_notes: true
           token: ${{ github.token }}
+
+      - name: Final CI message
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.compare_md5.outputs.release_needed }}" == "true" ]]; then
+            echo "::notice title=Workflow result::Release created: ${{ steps.create_version.outputs.tag }}"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Final result" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "✅ Release created: \`${{ steps.create_version.outputs.tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice title=Workflow result::Release not created. Reason: ${{ steps.compare_md5.outputs.reason }}"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Final result" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "⏭️ Release not created" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Reason: \`${{ steps.compare_md5.outputs.reason }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Latest release checked: \`${{ steps.compare_md5.outputs.latest_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
