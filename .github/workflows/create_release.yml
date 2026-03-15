@@ -11,13 +11,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           show-progress: 'false'
           lfs: 'true'
 
       - name: Restore source data files if available
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-restore
         with:
           path: data/
@@ -45,7 +45,7 @@ jobs:
           GENOME_AND_ANNOTATION_VERSION: ${{ steps.new_version.outputs.tag }}
 
       - name: Save source data files for next use
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache-save
         if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
