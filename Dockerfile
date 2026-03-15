@@ -26,7 +26,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.10.9 /uv /usr/local/bin/uv
 ENV UV_PYTHON_DOWNLOADS=never \
     UV_PYTHON=/opt/conda/envs/bioenv/bin/python \
     UV_LINK_MODE=copy \
-    UV_NO_CACHE=1
+    UV_NO_CACHE=1 \
+    UV_PROJECT_ENVIRONMENT=/home/$MAMBA_USER/.venv
 
 # Create venv in user-writable location
 RUN uv venv /home/$MAMBA_USER/.venv --python /opt/conda/envs/bioenv/bin/python
@@ -36,10 +37,12 @@ ENV VIRTUAL_ENV=/home/$MAMBA_USER/.venv \
     PATH=/home/$MAMBA_USER/.venv/bin:/opt/conda/envs/bioenv/bin:$PATH
 
 WORKDIR /app
-COPY --chown=$MAMBA_USER:$MAMBA_USER requirements.txt .
-RUN uv pip install --python /home/$MAMBA_USER/.venv/bin/python -r requirements.txt
+
+COPY --chown=$MAMBA_USER:$MAMBA_USER pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER . .
+RUN uv sync --frozen
 
 RUN which python && python --version && which nextflow && nextflow -version
 
