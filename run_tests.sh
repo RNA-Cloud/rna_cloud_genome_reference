@@ -19,11 +19,15 @@ echo "---------------------------"
 echo "🏋️ Preparing gnomAD data for batch run test"
 echo "---------------------------"
 
-if [ ! -f "data/gnomad/GRCh38/gnomad_r4_freq.tsv.gz" ]; then
+if [ ! -f "tests/batch_run/gnomad/GRCh38/gnomad_r4_freq.tsv.gz" ]; then
+  if [ ! -f "data/gnomad/GRCh38/gnomad_r4_freq.tsv.gz" ]; then
+    echo "❌ Source gnomAD data not found at data/gnomad/GRCh38/gnomad_r4_freq.tsv.gz"
+    exit 1
+  fi
   mkdir -p tests/batch_run/gnomad/GRCh38
   gunzip -c data/gnomad/GRCh38/gnomad_r4_freq.tsv.gz | awk -F"\t" 'NR == 1 || $1=="15" || $1=="22"' | gzip -c > tests/batch_run/gnomad/GRCh38/gnomad_r4_freq.tsv.gz
 else
-  echo "⏭️ gnomAD data already exists, skipping preparation"
+  echo "⏭️ gnomAD test subset already exists, skipping preparation"
 fi
 
 echo "---------------------------"

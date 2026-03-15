@@ -161,13 +161,13 @@ def main(argv: list[str] | None = None):
 
         assembly_info = assembly_report_parser.assembly_info
         assembly = assembly_info.get('Assembly name', 'Unknown Assembly')
-        provider = assembly_info.get('Submitter', 'Unknown Provider')
+        submitter = assembly_info.get('Submitter', 'Unknown Submitter')
         genbank_accession = assembly_info.get('GenBank assembly accession', 'Unknown Accession')
         refseq_accession = assembly_info.get('RefSeq assembly accession', 'Unknown Accession')
 
         print("# Reference Genome and Annotation")
         print(f"- Assembly: {assembly}")
-        print(f"- Provider: {provider}")
+        print(f"- Submitter: {submitter}")
         print(f"- GenBank Accession: {genbank_accession}")
         print(f"- RefSeq Accession: {refseq_accession}")
         print()
