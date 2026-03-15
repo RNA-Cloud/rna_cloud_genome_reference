@@ -5,11 +5,41 @@
 
 version: 2
 updates:
-  - package-ecosystem: "docker" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "uv"
+    directory: "/"
+    target-branch: "main"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+
+    # Reduce PR noise
+    open-pull-requests-limit: 10
+
+    commit-message:
+      prefix: "chore"
+
+    # Group related updates
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+
+      runtime-dependencies:
+        dependency-type: "production"
+
+    # Optional: keep version strategy conservative
+    versioning-strategy: increase-if-necessary
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
     schedule:
       interval: "weekly"
+
+    open-pull-requests-limit: 10
+
+    commit-message:
+      prefix: "chore"
+
+    groups:
+      github-actions:
+        patterns:
+          - "*"
