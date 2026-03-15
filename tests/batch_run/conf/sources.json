@@ -1,0 +1,31 @@
+{
+    "genome": {
+        "provider": "NCBI Refseq",
+        "fasta_url": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_genome.fna.gz",
+        "annotation_url": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_genome.gtf.gz",
+        "assembly_report": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_assembly_report.txt",
+        "assembly_report_comment_lines": 63,
+        "cen_par_mask_regions": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_CEN_PAR_mask_regions.txt",
+        "ebv_fasta_url": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_EBV_genome.fna.gz",
+        "ebv_annotation_url": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_EBV_genome.gtf.gz",
+        "refseq_mane_annotation_url": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_MANE.gtf.gz"
+    },
+    "reference": {
+        "grc_fixes": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_grc_fixes.tsv",
+        "clinically_relevant_genes": "https://github.com/RNA-Cloud/test_datasets/raw/refs/heads/rna_cloud_genome_reference/data/test_clinically_relevant_genes.tsv"
+    },
+    "rRNA": {
+        "NC_000021": "reference/rRNA/NC_000021.9_45S.gtf",
+        "NT_167214": "reference/rRNA/NT_167214.1.gtf",
+        "NT_187388": "reference/rRNA/NT_187388.1.gtf"
+    },
+    "ncbi_assembly_masked_regions": {
+        "chr15_KN538374v1_fix": "reference/ncbi_assembly_masked_regions/chr15_KN538374v1_fix.bed"
+    },
+    "gnomad": {
+        "reference": "data/gnomad/GRCh38/gnomad_r4_freq.tsv.gz",
+        "freq": 0.1,
+        "hemizygote_count": 100,
+        "homozygote_count": 100
+    }
+}

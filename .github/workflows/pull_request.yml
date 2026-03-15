@@ -27,124 +27,19 @@ jobs:
           show-progress: 'false'
           lfs: 'true'
 
-      - name: Restore source data files if available
-        uses: actions/cache/restore@v4
-        id: cache-restore
-        with:
-          path: data/
-          key: ${{ hashFiles('conf/sources.json') }}
-
-      - name: Determine new version
-        id: new_version
-        uses: anothrNick/github-tag-action@1.75.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_BUMP: patch
-          DRY_RUN: true
-
       - name: Check free disk space
         run: df -h
 
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
-      - name: Set up directories
-        run: |
-          mkdir -p data temp output work reference
-          chmod -R 777 data temp output work reference
-
       - name: Run tests
         run: ./run_tests.sh
 
-      - name: Run workflow
-        run: ./run_workflow.sh
-        env:
-          GENOME_AND_ANNOTATION_VERSION: ${{ steps.new_version.outputs.tag }}
-
-      - name: Save source data files for next use
-        uses: actions/cache/save@v4
-        id: cache-save
-        if: steps.cache-restore.outputs.cache-hit != 'true'
+      - name: Upload output artifacts
+        uses: actions/upload-artifact@v7
         with:
-          path: data/
-          key: ${{ hashFiles('conf/sources.json') }}
-
-      - name: Upload DAG
-        uses: actions/upload-artifact@v4
-        with:
-          name: DAG.mmd
-          path: output/dag.mmd
+          name: test_output
+          path: tests/batch_run/output
           compression-level: 0
           retention-days: 7
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: report.html
-          path: output/report.html
-          compression-level: 0
-          retention-days: 7
-
-      - name: Upload timeline
-        uses: actions/upload-artifact@v4
-        with:
-          name: timeline.html
-          path: output/timeline.html
-          compression-level: 0
-          retention-days: 7
-
-      - name: Upload validation report
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation_report.txt
-          path: output/validation_report.txt
-          compression-level: 0
-          retention-days: 7
-
-      - name: Upload genome build report
-        uses: actions/upload-artifact@v4
-        with:
-          name: genome_and_annotation_report.md
-          path: output/genome_and_annotation_report.md
-          compression-level: 0
-          retention-days: 7
-
-      - name: Compare md5checksums with latest release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          GENOME_AND_ANNOTATION_VERSION: ${{ steps.new_version.outputs.tag }}
-        run: |
-          set -euo pipefail
-
-          echo "🏷️ Get latest release tag"
-          tag="$(gh release list --json isLatest,tagName -q '.[] | select(.isLatest == true) | .tagName')"
-          echo "Latest release tag: $tag"
-
-          # fetch md5checksums.txt from that tag in the repo (works for private repos)
-          tmpfile="/tmp/md5checksums.txt"
-
-          echo "⬇️ Downloading md5checksums.txt from release $tag ..."
-          gh release download $tag -p 'md5checksums.txt' -O $tmpfile
-
-          if [ ! -f $tmpfile ]; then
-            echo "::error::No md5checksums.txt found at tag $tag."
-            exit 1
-          fi
-
-          echo "🔎 Comparing files:"
-          echo "--------------------------"
-          echo "📃 Generated file (this run):"
-          cat output/md5checksums.txt
-          echo "--------------------------"
-          echo "📃 Release file ($tag):"
-          cat "$tmpfile"
-          echo "--------------------------"
-
-          # compare with the one produced in this run
-          if cmp -s "output/md5checksums.txt" "$tmpfile"; then
-            echo "::notice::= md5checksums for candidate release ${GENOME_AND_ANNOTATION_VERSION} matches the latest release ($tag)."
-          else
-            echo "::notice::≠ md5checksums for candidate release ${GENOME_AND_ANNOTATION_VERSION} differs from the latest release ($tag):"
-            diff -u "$tmpfile" "output/md5checksums.txt" || true
-          fi

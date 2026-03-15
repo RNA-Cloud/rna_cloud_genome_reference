@@ -222,3 +222,6 @@ work
 
 # Git folders
 .git
+
+# Batch test folder
+tests/batch_run
